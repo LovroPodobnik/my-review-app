@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Store Review Scraper</title>
+</head>
+<body>
+    <h1>App Store Review Scraper</h1>
+    <form id="scrape-form">
+        <label for="url">App Store URL:</label>
+        <input type="url" id="url" name="url" required>
+        <button type="submit">Scrape Reviews</button>
+    </form>
+    <button id="load-reviews" style="display: none;">Load Saved Reviews</button>
+    <div id="reviews"></div>
+
+    <div id="suggestions"></div>
+
+    <script>
+    document.getElementById('scrape-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const url = document.getElementById('url').value;
+        const response = await fetch('/scrape', {
+            method: 'POST',
+            body: new FormData(event.target)
+        });
+        const data = await response.json();
+
+        if (data.error) {
+            alert(data.error);
+        } else {
+            displayReviews(data.reviews, data.suggestion);
+            document.getElementById('load-reviews').style.display = 'block';
+        }
+    });
+
+    document.getElementById('load-reviews').addEventListener('click', async () => {
+        const response = await fetch('/reviews.json');
+        const reviews = await response.json();
+        displayReviews(reviews);
+    });
+
+    function displayReviews(reviews, suggestion) {
+        const container = document.getElementById('reviews');
+        container.innerHTML = '';
+
+        for (const review of reviews) {
+            const reviewElement = document.createElement('div');
+            reviewElement.innerHTML = `
+                <h3>${review.title} - ${review.rating} stars</h3>
+                <p>${review.review}</p>
+            `;
+            container.appendChild(reviewElement);
+        }
+
+        // Display suggestions
+        const suggestionsContainer = document.getElementById('suggestions');
+        suggestionsContainer.innerHTML = `<h2>Suggestions:</h2><p>${suggestion}</p>`;
+    }
+    </script>
+</body>
+</html>
